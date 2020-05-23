@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Android_5.2.1</string>
+    <string name="login_hint">Login</string>
+    <string name="password_hint">Password</string>
+    <string name="login_btn_text">LOGIN</string>
+    <string name="registration_btn_text">REGISTRATION</string>
+    <string name="error_input_empty">Enter your Login and Password</string>
+    <string name="toast_enter_ok">Welcome</string>
+    <string name="toast_enter_failed">Access denied failed</string>
+    <string name="toast_registration_ok">Registration done</string>
+    <string name="toast_not_registered">You not registered</string>
+</resources>
