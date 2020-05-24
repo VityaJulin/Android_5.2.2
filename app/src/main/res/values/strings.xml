@@ -9,4 +9,5 @@
     <string name="toast_enter_failed">Access denied failed</string>
     <string name="toast_registration_ok">Registration done</string>
     <string name="toast_not_registered">You not registered</string>
+    <string name="check_save_external">Check to save in external storage</string>
 </resources>

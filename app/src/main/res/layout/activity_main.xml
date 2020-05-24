@@ -26,6 +26,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/edtxt_login" />
 
+    <CheckBox
+        android:id="@+id/chbox_external_storage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/check_save_external"
+        app:layout_constraintBottom_toTopOf="@id/btn_login"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/edtxt_password" />
+
     <Button
         android:id="@+id/btn_login"
         android:layout_width="match_parent"
@@ -34,7 +44,7 @@
         app:layout_constraintBottom_toTopOf="@id/btn_registration"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edtxt_password" />
+        app:layout_constraintTop_toBottomOf="@id/chbox_external_storage" />
 
     <Button
         android:id="@+id/btn_registration"
