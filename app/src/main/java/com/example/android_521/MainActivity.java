@@ -55,11 +55,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (chBoxChoice.getBoolean(PREF_EXTERNAL_STORAGE, false)) {
+                    readExternalStorage();
+                } else {
+                    readInnerStorage();
                 }
-                readInnerStorage();
             }
-
-
         });
 
         registrationBtn.setOnClickListener(new View.OnClickListener() {
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
             FileWriter writer = null;
             try {
-                writer = new FileWriter(saveData, true);
+                writer = new FileWriter(saveData, false);
                 writer.append(enterLogin + "\n" + enterPassword);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -107,15 +107,28 @@ public class MainActivity extends AppCompatActivity {
             File saveData = new File(getApplicationContext()
                     .getExternalFilesDir(null), "save.txt");
 
-
             FileReader reader = null;
 
-            try {
-                reader = new FileReader(saveData);
-                String userLogin = reader.readline;
-                String userPassword = reader.readLine();
+            try (BufferedReader br = new BufferedReader(new FileReader(saveData))) {
+                if (isInputFieldEmpty()) {
+                    Toast.makeText(MainActivity.this, R.string.error_input_empty, Toast.LENGTH_SHORT).show();
+                } else {
+                    String enterLogin = loginEdTxt.getText().toString();
+                    String enterPassword = passwordEdTxt.getText().toString();
+                    String userLogin = br.readLine();
+                    String userPassword = br.readLine();
 
-            } catch (FileNotFoundException e) {
+                    if (userLogin == null || userPassword == null) {
+                        Toast.makeText(MainActivity.this, R.string.toast_not_registered, Toast.LENGTH_SHORT).show();
+                    } else {
+                        if (userLogin.equals(enterLogin) && userPassword.equals(enterPassword)) {
+                            Toast.makeText(MainActivity.this, R.string.toast_enter_ok, Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, R.string.toast_enter_failed, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
