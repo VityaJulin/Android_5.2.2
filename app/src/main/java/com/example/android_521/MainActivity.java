@@ -16,7 +16,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -31,8 +30,11 @@ public class MainActivity extends AppCompatActivity {
     private Button registrationBtn;
     private CheckBox chBoxExternalStorage;
     private SharedPreferences chBoxChoice;
-    private final String PREF_STORAGE_MODE = "PREF_STORAGE_MODE";
-    private final String PREF_EXTERNAL_STORAGE = "PREF_EXTERNAL_STORAGE";
+    private static final String PREF_STORAGE_MODE = "PREF_STORAGE_MODE";
+    private static final String PREF_EXTERNAL_STORAGE = "PREF_EXTERNAL_STORAGE";
+    private static final String FILE_LOGIN = "login.txt";
+    private static final String FILE_PASSWORD = "password.txt";
+    private static final String FILE_SAVE = "save.txt";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,88 +79,90 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void writeExternalStorage() {
-        if (isExternalStorageWritable() == true) {
-            File saveData = new File(getApplicationContext()
-                    .getExternalFilesDir(null), "save.txt");
+        if (isInputFieldEmpty()) {
+            Toast.makeText(MainActivity.this, R.string.error_input_empty, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            String enterLogin = loginEdTxt.getText().toString();
-            String enterPassword = passwordEdTxt.getText().toString();
-
-            FileWriter writer = null;
-            try {
-                writer = new FileWriter(saveData, false);
-                writer.append(enterLogin + "\n" + enterPassword);
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        } else {
+        if (isExternalStorageWritable() == false) {
             Toast.makeText(this, "No access", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        File saveData = new File(getApplicationContext()
+                .getExternalFilesDir(null), FILE_SAVE);
+
+        String enterLogin = loginEdTxt.getText().toString();
+        String enterPassword = passwordEdTxt.getText().toString();
+
+        try (FileWriter writer = new FileWriter(saveData, false)) {
+            writer.append(enterLogin + "\n" + enterPassword);
+            Toast.makeText(MainActivity.this, R.string.toast_registration_ok, Toast.LENGTH_SHORT).show();
+            loginEdTxt.setText("");
+            passwordEdTxt.setText("");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     public void readExternalStorage() {
-        if (isExternalStorageWritable() == true) {
-            File saveData = new File(getApplicationContext()
-                    .getExternalFilesDir(null), "save.txt");
+        if (isExternalStorageWritable() == false) {
+            Toast.makeText(this, "No access", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-            FileReader reader = null;
+        File saveData = new File(getApplicationContext()
+                .getExternalFilesDir(null), "save.txt");
 
-            try (BufferedReader br = new BufferedReader(new FileReader(saveData))) {
-                if (isInputFieldEmpty()) {
-                    Toast.makeText(MainActivity.this, R.string.error_input_empty, Toast.LENGTH_SHORT).show();
+        try (FileReader reader = new FileReader(saveData);
+             BufferedReader br = new BufferedReader(reader)) {
+            if (isInputFieldEmpty()) {
+                Toast.makeText(MainActivity.this, R.string.error_input_empty, Toast.LENGTH_SHORT).show();
+            } else {
+                String enterLogin = loginEdTxt.getText().toString();
+                String enterPassword = passwordEdTxt.getText().toString();
+                String userLogin = br.readLine();
+                String userPassword = br.readLine();
+
+                if (userLogin == null || userPassword == null) {
+                    Toast.makeText(MainActivity.this, R.string.toast_not_registered, Toast.LENGTH_SHORT).show();
                 } else {
-                    String enterLogin = loginEdTxt.getText().toString();
-                    String enterPassword = passwordEdTxt.getText().toString();
-                    String userLogin = br.readLine();
-                    String userPassword = br.readLine();
-
-                    if (userLogin == null || userPassword == null) {
-                        Toast.makeText(MainActivity.this, R.string.toast_not_registered, Toast.LENGTH_SHORT).show();
+                    if (userLogin.equals(enterLogin) && userPassword.equals(enterPassword)) {
+                        Toast.makeText(MainActivity.this, R.string.toast_enter_ok, Toast.LENGTH_SHORT).show();
                     } else {
-                        if (userLogin.equals(enterLogin) && userPassword.equals(enterPassword)) {
-                            Toast.makeText(MainActivity.this, R.string.toast_enter_ok, Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(MainActivity.this, R.string.toast_enter_failed, Toast.LENGTH_SHORT).show();
-                        }
+                        Toast.makeText(MainActivity.this, R.string.toast_enter_failed, Toast.LENGTH_SHORT).show();
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-        } else {
-            Toast.makeText(this, "No access", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     public void readInnerStorage() {
-        FileInputStream loginInputStream = null;
-        FileInputStream passwordInputStream = null;
+        File loginFile = new File(getFilesDir(), FILE_LOGIN);
+        File passwordFile = new File(getFilesDir(), FILE_PASSWORD);
 
-        try {
-            loginInputStream = openFileInput("login.txt");
-            passwordInputStream = openFileInput("password.txt");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        if (!loginFile.exists() || !passwordFile.exists()) {
+            Toast.makeText(MainActivity.this, R.string.toast_not_registered, Toast.LENGTH_SHORT).show();
+            return;
         }
 
-        InputStreamReader loginStreamReader = new InputStreamReader(loginInputStream);
-        InputStreamReader passwordStreamReader = new InputStreamReader(passwordInputStream);
+        try (FileInputStream loginInputStream = new FileInputStream(loginFile);
+             FileInputStream passwordInputStream = new FileInputStream(passwordFile);
 
-        BufferedReader loginReader = new BufferedReader(loginStreamReader);
-        BufferedReader passwordReader = new BufferedReader(passwordStreamReader);
+             InputStreamReader loginStreamReader = new InputStreamReader(loginInputStream);
+             InputStreamReader passwordStreamReader = new InputStreamReader(passwordInputStream);
 
-        if (isInputFieldEmpty()) {
-            Toast.makeText(MainActivity.this, R.string.error_input_empty, Toast.LENGTH_SHORT).show();
-        } else {
-            String enterLogin = loginEdTxt.getText().toString();
-            String enterPassword = passwordEdTxt.getText().toString();
-            try {
+             BufferedReader loginReader = new BufferedReader(loginStreamReader);
+             BufferedReader passwordReader = new BufferedReader(passwordStreamReader)) {
+
+            if (isInputFieldEmpty()) {
+                Toast.makeText(MainActivity.this, R.string.error_input_empty, Toast.LENGTH_SHORT).show();
+            } else {
+                String enterLogin = loginEdTxt.getText().toString();
+                String enterPassword = passwordEdTxt.getText().toString();
+
                 String userLogin = loginReader.readLine();
                 String userPassword = passwordReader.readLine();
                 if (userLogin == null || userPassword == null) {
@@ -170,50 +174,40 @@ public class MainActivity extends AppCompatActivity {
                         Toast.makeText(MainActivity.this, R.string.toast_enter_failed, Toast.LENGTH_SHORT).show();
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     public void writeInnerStorage() {
-        FileOutputStream loginOutputStream = null;
-        FileOutputStream passwordOutputStream = null;
+        if (isInputFieldEmpty()) {
+            Toast.makeText(MainActivity.this, R.string.error_input_empty, Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        try {
-            loginOutputStream = openFileOutput("login.txt", MODE_PRIVATE);
-            passwordOutputStream = openFileOutput("password.txt", MODE_PRIVATE);
-        } catch (FileNotFoundException e) {
+        try (FileOutputStream loginOutputStream = openFileOutput(FILE_LOGIN, MODE_PRIVATE);
+             FileOutputStream passwordOutputStream = openFileOutput(FILE_PASSWORD, MODE_PRIVATE);
+
+             OutputStreamWriter loginOutputStreamWriter = new OutputStreamWriter(loginOutputStream);
+             OutputStreamWriter passwordOutputStreamWriter = new OutputStreamWriter(passwordOutputStream);
+
+             BufferedWriter loginBw = new BufferedWriter(loginOutputStreamWriter);
+             BufferedWriter passwordBw = new BufferedWriter(passwordOutputStreamWriter)) {
+
+            String login = loginEdTxt.getText().toString();
+            String password = passwordEdTxt.getText().toString();
+
+            loginBw.write(login);
+            passwordBw.write(password);
+
+            Toast.makeText(MainActivity.this, R.string.toast_registration_ok, Toast.LENGTH_SHORT).show();
+            loginEdTxt.setText("");
+            passwordEdTxt.setText("");
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
-        OutputStreamWriter loginOutputStreamWriter = new OutputStreamWriter(loginOutputStream);
-        OutputStreamWriter passwordOutputStreamWriter = new OutputStreamWriter(passwordOutputStream);
-        BufferedWriter loginBw = new BufferedWriter(loginOutputStreamWriter);
-        BufferedWriter passwordBw = new BufferedWriter(passwordOutputStreamWriter);
-
-        if (isInputFieldEmpty()) {
-            Toast.makeText(MainActivity.this, R.string.error_input_empty, Toast.LENGTH_SHORT).show();
-        } else {
-            String login = loginEdTxt.getText().toString();
-            String password = passwordEdTxt.getText().toString();
-            try {
-                loginBw.write(login);
-                passwordBw.write(password);
-                Toast.makeText(MainActivity.this, R.string.toast_registration_ok, Toast.LENGTH_SHORT).show();
-                loginEdTxt.setText("");
-                passwordEdTxt.setText("");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                loginBw.close();
-                passwordBw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public boolean isInputFieldEmpty() {
