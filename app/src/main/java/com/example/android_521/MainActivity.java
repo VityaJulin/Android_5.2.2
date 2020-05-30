@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        if (isExternalStorageWritable() == false) {
+        if (!isExternalStorageWritable()) {
             Toast.makeText(this, "No access", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void readExternalStorage() {
-        if (isExternalStorageWritable() == false) {
+        if (!isExternalStorageWritable()) {
             Toast.makeText(this, "No access", Toast.LENGTH_SHORT).show();
             return;
         }
